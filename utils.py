@@ -1,25 +1,25 @@
 import tempfile
 import uuid
 import os
-import time
 
-from transformers import AutoProcessor, BarkModel
+from transformers import AutoProcessor, AutoModel
 from scipy.io.wavfile import write
 import torch
-import numpy as np
 
 MODEL_NAME = 'suno/bark'
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-processor = AutoProcessor.from_pretrained(pretrained_model_name_or_path=MODEL_NAME)
-model = BarkModel.from_pretrained(pretrained_model_name_or_path=MODEL_NAME)
+processor = AutoProcessor.from_pretrained(
+    pretrained_model_name_or_path=MODEL_NAME)
+model = AutoModel.from_pretrained(pretrained_model_name_or_path=MODEL_NAME)
 model.to(DEVICE)
+
 
 def generate_audio(text: str, preset: str) -> None:
     inputs = processor(text, voice_preset=preset, return_tensors='pt')
     inputs.to(DEVICE)
-    audio_array = model.generate(**inputs)
+    audio_array = model.generate(**inputs, do_sample=True)
     audio_array = audio_array.cpu().numpy().squeeze()
     sample_rate = model.generation_config.sample_rate
     file_id = uuid.uuid1()
